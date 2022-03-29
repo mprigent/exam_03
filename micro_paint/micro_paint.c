@@ -2,64 +2,64 @@
 #include <stdio.h>
 #include <unistd.h>
 
-typedef struct s_drawing {
+typedef struct s_draw {
     int width;
     int height;
     char *matrice;
-} t_drawing;
+} t_draw;
 
-typedef struct s_rectangle {
+typedef struct s_rect {
     char type;
     float x;
     float y;
     float width;
     float height;
     char color;
-} t_rectangle;
+} t_rect;
 
-int get_info(FILE *file, t_drawing *drawing)
+int get_info(FILE *file, t_draw *draw)
 {
-	char 	*tmp;
+	char 	*temp;
 	int 	i;
 	char	background;
-	if (fscanf(file, "%d %d %c\n", &drawing->width, &drawing->height, &background) == 3)
+	if (fscanf(file, "%d %d %c\n", &draw->width, &draw->height, &background) == 3)
 	{
-		if (!(drawing->width > 0 && drawing->width <= 300) || !(drawing->height > 0 && drawing->height <= 300))
+		if (!(draw->width > 0 && draw->width <= 300) || !(draw->height > 0 && draw->height <= 300))
 			return (1);
-		tmp = (char *)malloc(drawing->width * drawing->height);
-		drawing->matrice = tmp;
-		if (!drawing->matrice)
+		temp = (char *)malloc(draw->width * draw->height);
+		draw->matrice = temp;
+		if (!draw->matrice)
 			return (1);
 		i = 0;
-		while (i < drawing->width * drawing->height)
-			drawing->matrice[i++] = background;
+		while (i < draw->width * draw->height)
+			draw->matrice[i++] = background;
 		return (0);
 	}
 	return (1);
 }
 
-int is_in_rectangle(float x, float y, t_rectangle *rectangle)
+int is_in_rect(float x, float y, t_rect *rect)
 {
-	if ((((x < rectangle->x) || (rectangle->x + rectangle->width < x)) || (y < rectangle->y)) || (rectangle->y + rectangle->height < y))
+	if ((((x < rect->x) || (rect->x + rect->width < x)) || (y < rect->y)) || (rect->y + rect->height < y))
 		return (0);
-	if (((x - rectangle->x < 1.00000000) || ((rectangle->x + rectangle->width) - x < 1.00000000)) ||
-		((y - rectangle->y < 1.00000000 || ((rectangle->y + rectangle->height) - y < 1.00000000))))
+	if (((x - rect->x < 1.00000000) || ((rect->x + rect->width) - x < 1.00000000)) ||
+		((y - rect->y < 1.00000000 || ((rect->y + rect->height) - y < 1.00000000))))
 		return (2); // Border
 	return (1); // Inside
 }
 
-int apply_op(t_rectangle *rect,t_drawing *drawing)
+int apply_op(t_rect *rect,t_draw *draw)
 {
 	int j, i = 0, is_in;
 	if (((rect->width <= 0.00000000) || (rect->height <= 0.00000000)) || ((rect->type != 'R' && (rect->type != 'r'))))
 		return (1);
-	while (i < drawing->height)
+	while (i < draw->height)
 	{
 		j = 0;
-		while (j < drawing->width){
-			is_in = is_in_rectangle((float)j, (float)i, rect);
+		while (j < draw->width){
+			is_in = is_in_rect((float)j, (float)i, rect);
 			if ((is_in == 2) || ((is_in == 1 && (rect->type == 'R'))))
-				drawing->matrice[j + i * drawing->width] = rect->color;
+				draw->matrice[j + i * draw->width] = rect->color;
 			j++;
 		}
 		i++;
@@ -67,30 +67,30 @@ int apply_op(t_rectangle *rect,t_drawing *drawing)
 	return (0);
 }
 
-void print_info(t_drawing *zone)
+void print_info(t_draw *draw)
 {
 	int i = 0;
-	while (i < zone->height)
-		printf("%.*s\n", zone->width, zone->matrice + i++ * zone->width);
+	while (i < draw->height)
+		printf("%.*s\n", draw->width, draw->matrice + i++ * draw->width);
 }
 
 int execute(FILE *file)
 {
 	int 		scan_ret;
-	t_rectangle	rect;
-	t_drawing		drawing;
-	if (!get_info(file, &drawing))
+	t_rect	rect;
+	t_draw		draw;
+	if (!get_info(file, &draw))
 	{
 		scan_ret = fscanf(file,"%c %f %f %f %f %c\n", &rect.type, &rect.x, &rect.y, &rect.width, &rect.height, &rect.color);
 		while (scan_ret == 6)
 		{
-			if (apply_op(&rect, &drawing))
+			if (apply_op(&rect, &draw))
 				return (1);
 			scan_ret = fscanf(file,"%c %f %f %f %f %c\n", &rect.type, &rect.x, &rect.y, &rect.width, &rect.height, &rect.color);
 		}
 		if (scan_ret == -1)
 		{
-			print_info(&drawing);
+			print_info(&draw);
 			return (0);
 		}
 	}
